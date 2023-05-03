@@ -1,0 +1,25 @@
+<html>
+<head>
+    <title>ex7_Calculator</title>
+    <script>
+        function calc() {
+            let x = document.getElementById("x").value;
+            let y = document.getElementById("y").value;
+            let sum;
+            sum = parseInt(x) + parseInt(y);
+            document.getElementById("sum").value = sum;
+        }
+    </script>
+</head>
+
+<body>
+    <h1>덧셈 계산기</h1><br/>
+    <form name="myform">
+        첫번째 정수: <input id="x" value="1" /><br />
+        두번째 정수: <input id="y" value="10" /><br />
+        <input type="button" value="계산" onclick="calc();" />
+        <hr>
+        합계: <input id="sum" /><br />
+    </form>
+</body>
+</html>

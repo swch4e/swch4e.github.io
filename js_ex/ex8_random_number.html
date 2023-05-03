@@ -1,0 +1,31 @@
+<html>
+<head>
+    <title>ex8_Randomnumber</title>
+    <script>
+        function randomNum(min, max) {
+            let randNum = Math.floor(Math.random()*(max-min+1)) + min;
+            console.log(min,max,randNum)
+            return randNum;
+        }
+        function gogo(){
+            let x = document.getElementById("x").value;
+            let y = document.getElementById("y").value;
+            let rn = randomNum(parseInt(x),parseInt(y));
+            document.getElementById("rNumber").innerHTML = rn;
+            // console.log(x,y,rn);
+        }
+    </script>
+</head>
+<body>
+    <h1>랜덤숫자 발생기</h1><br/>
+    <form name="myform">
+        희망 랜덤 숫자 발생 범위: <input id="x" value="1" /> ~ <input id="y" value="10"/><br />
+        <input type="button" value="GoGo~!" onclick="gogo();" />
+    </form>
+        <hr>
+        랜덤 숫자: <h1 id="rNumber"></h1>
+    <script>
+
+    </script>
+</body>
+</html>
