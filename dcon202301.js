@@ -6,13 +6,9 @@ function randomNum(min, max) {
     return randNum;
 }
 function gogo(){
-    /**
-    let x = document.getElementById("x").value;
-    let y = document.getElementById("y").value;
-    **/
     let x = 0;
     let y = studentsList.length -1;
     let rn = randomNum(parseInt(x),parseInt(y));
-    console.log(x,y, rn)
+    // console.log(x,y, rn)
     document.getElementById("rNumber").innerHTML = studentsList[parseInt(rn)] + " 학생!";
 }
