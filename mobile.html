@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Random Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        #left-list, #right-list {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 45%;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Random Selector</h1>
+    <button onclick="selectRandomStudent()">발표자 뽑기!</button>
+
+    <div id="container">
+        <div id="left-list">
+            <h2>선택받기 전의 학생</h2>
+            <ul id="students">
+                <!-- Add your list of students here -->
+                <li>강승은</li>
+                <li>강예인</li>
+                <li>권원종</li>
+                <li>김민서</li>
+                <li>김연희</li>
+                <li>김영찬</li>
+                <li>김지우</li>
+                <li>김지원</li>
+                <li>김혜림</li>
+                <li>나윤서</li>
+                <li>박상우</li>
+                <li>박예은</li>
+                <li>박준혁</li>
+                <li>박진서</li>
+                <li>서유경</li>
+                <li>심서윤</li>
+                <li>유효종</li>
+                <li>윤민주</li>
+                <li>윤창기</li>
+                <li>이국봉</li>
+                <li>이동윤</li>
+                <li>이상준</li>
+                <li>이승준</li>
+                <li>이재원</li>
+                <li>이정근</li>
+                <li>임원빈</li>
+                <li>전지수</li>
+                <li>정에스더</li>
+                <li>정지원</li>
+                <li>조민규</li>
+                <li>조아영</li>
+                <li>조재원</li>
+                <li>최인혁</li>
+                <li>최정민</li>
+                <!-- Add more students as needed -->
+            </ul>
+        </div>
+        <div id="right-list">
+            <h2>선택받은 학생</h2>
+            <ul id="selected-students"></ul>
+        </div>
+    </div>
+
+    <script>
+        function selectRandomStudent() {
+            // Get the ul elements
+            var studentsList = document.getElementById('students');
+            var selectedList = document.getElementById('selected-students');
+
+            // Get all li elements from the students list
+            var studentsArray = Array.from(studentsList.children);
+
+            if (studentsArray.length > 0) {
+                // Generate a random index
+                var randomIndex = Math.floor(Math.random() * studentsArray.length);
+
+                // Remove the selected student from the left list
+                var selectedStudent = studentsArray.splice(randomIndex, 1)[0];
+
+                // Add the selected student to the right list
+                selectedList.appendChild(selectedStudent);
+            } else {
+                alert('No students left to select!');
+            }
+        }
+    </script>
+</body>
+</html>

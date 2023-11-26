@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Random Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        #left-list, #right-list {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 45%;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Random Selector</h1>
+    <div id="container">
+        <div id="left-list">
+            <h2>Students List</h2>
+            <ul id="students">
+                <!-- Add your list of students here -->
+                <li>Student 1</li>
+                <li>Student 2</li>
+                <li>Student 3</li>
+                <!-- Add more students as needed -->
+            </ul>
+        </div>
+        <div id="right-list">
+            <h2>Selected Students</h2>
+            <ul id="selected-students"></ul>
+        </div>
+    </div>
+    <button onclick="selectRandomStudent()">Draw</button>
+
+    <script>
+        function selectRandomStudent() {
+            // Get the ul elements
+            var studentsList = document.getElementById('students');
+            var selectedList = document.getElementById('selected-students');
+
+            // Get all li elements from the students list
+            var studentsArray = Array.from(studentsList.children);
+
+            if (studentsArray.length > 0) {
+                // Generate a random index
+                var randomIndex = Math.floor(Math.random() * studentsArray.length);
+
+                // Remove the selected student from the left list
+                var selectedStudent = studentsArray.splice(randomIndex, 1)[0];
+
+                // Add the selected student to the right list
+                selectedList.appendChild(selectedStudent);
+            } else {
+                alert('No students left to select!');
+            }
+        }
+    </script>
+</body>
+</html>
