@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>블록체인 채굴 게임</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif; min-height:100vh; }
+  .app { max-width:480px; margin:0 auto; min-height:100vh; position:relative; padding-bottom:24px; }
+
+  /* === 학생 테마 (인디고/퍼플) === */
+  body.student { background:linear-gradient(160deg,#1e293b,#0f172a); color:#e2e8f0; }
+  body.student .app { background:#0f172a; }
+  body.student .header { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+  body.student .card { background:#1e293b; border:1px solid #334155; }
+  body.student input, body.student select { background:#0f172a; color:#e2e8f0; border:1px solid #475569; }
+  body.student .card h2 { color:#a5b4fc; }
+  body.student button.primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+  body.student .tab.active { background:#4f46e5; border-color:#4f46e5; }
+  body.student .my-points { background:linear-gradient(135deg,#4f46e5,#7c3aed); }
+
+  /* === 교수 테마 (틸/에메랄드) === */
+  body.teacher { background:linear-gradient(160deg,#0f2922,#072019); color:#d1fae5; }
+  body.teacher .app { background:#072019; }
+  body.teacher .header { background:linear-gradient(135deg,#0d9488,#059669); }
+  body.teacher .card { background:#0f2e26; border:1px solid #1d4d40; }
+  body.teacher input, body.teacher select { background:#072019; color:#d1fae5; border:1px solid #1d6152; }
+  body.teacher .card h2 { color:#6ee7b7; }
+  body.teacher button.primary { background:linear-gradient(135deg,#0d9488,#059669); }
+  body.teacher .tab { background:#0f2e26; color:#6ee7b7; border:1px solid #1d4d40; }
+  body.teacher .tab.active { background:#0d9488; color:#fff; border-color:#0d9488; }
+  body.teacher .block-info { background:#072019; border:1px solid #1d4d40; }
+  body.teacher .formula { background:#072019; color:#6ee7b7; }
+  body.teacher .lookup .lk { background:#072019; border:1px solid #1d4d40; }
+  body.teacher .lk .c { color:#34d399; }
+  body.teacher th { background:#072019; color:#6ee7b7; }
+  body.teacher .info-bar { background:#0f2e26; border:1px solid #1d4d40; }
+
+  /* === 로그인 (중립) === */
+  body.login { background:linear-gradient(160deg,#1e293b,#0f172a); color:#e2e8f0; }
+  body.login .app { background:#0f172a; }
+  body.login .header { background:linear-gradient(135deg,#475569,#334155); }
+  body.login .card { background:#1e293b; border:1px solid #334155; }
+  body.login input, body.login select { background:#0f172a; color:#e2e8f0; border:1px solid #475569; }
+  body.login .card h2 { color:#cbd5e1; }
+  body.login button.primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+
+  .header { padding:16px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.4); position:sticky; top:0; z-index:50; }
+  .header h1 { font-size:19px; color:#fff; letter-spacing:.5px; }
+  .header .sub { font-size:11px; color:rgba(255,255,255,.85); margin-top:3px; }
+  .header .userbar { font-size:11px; color:#fff; margin-top:8px; display:flex; justify-content:center; gap:8px; align-items:center; flex-wrap:wrap; }
+  .logout-btn { background:rgba(255,255,255,.2); border:none; color:#fff; font-size:11px; padding:3px 9px; border-radius:6px; cursor:pointer; }
+  .room-chip { background:rgba(255,255,255,.18); padding:3px 9px; border-radius:6px; font-weight:700; letter-spacing:1px; }
+
+  .content { padding:14px; }
+  .card { border-radius:14px; padding:16px; margin-bottom:13px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .card h2 { font-size:14px; margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  label { font-size:12px; color:#94a3b8; display:block; margin-bottom:5px; margin-top:8px; }
+  body.teacher label { color:#6ee7b7; opacity:.85; }
+  input, select { width:100%; padding:11px 12px; border-radius:9px; font-size:15px; margin-bottom:4px; }
+  input:focus, select:focus { outline:none; border-color:#818cf8; }
+  button.primary { width:100%; padding:13px; border:none; border-radius:9px; color:#fff; font-size:15px; font-weight:600; margin-top:10px; cursor:pointer; }
+  button.primary:active { transform:scale(.98); }
+  button.primary:disabled { opacity:.45; }
+  button.ghost { width:100%; padding:11px; border:1px solid #475569; border-radius:9px; background:transparent; color:inherit; font-size:14px; margin-top:8px; cursor:pointer; }
+  body.teacher button.ghost { border-color:#1d6152; }
+  button.danger { background:linear-gradient(135deg,#ef4444,#dc2626)!important; }
+  button.mini { padding:7px 12px; font-size:12px; border-radius:7px; border:none; color:#fff; cursor:pointer; margin-top:6px; }
+
+  .role-select { display:flex; gap:10px; margin-bottom:18px; }
+  .role-btn { flex:1; padding:18px 8px; border-radius:12px; text-align:center; cursor:pointer; border:2px solid #334155; background:#1e293b; transition:.2s; }
+  .role-btn.active { border-color:#818cf8; background:#312e81; }
+  .role-btn .ico { font-size:30px; }
+  .role-btn .lbl { font-size:13px; margin-top:6px; color:#cbd5e1; }
+
+  .tabs { display:flex; gap:5px; margin-bottom:14px; flex-wrap:wrap; }
+  .tab { flex:1; min-width:54px; padding:9px 4px; text-align:center; border-radius:8px; font-size:12px; cursor:pointer; background:#1e293b; color:#94a3b8; border:1px solid #334155; }
+  .tab.active { color:#fff; }
+
+  .block-info { background:#0f172a; border-radius:10px; padding:12px; margin-bottom:10px; }
+  .row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; border-bottom:1px dashed rgba(148,163,184,.25); }
+  .row:last-child { border-bottom:none; }
+  .row .k { color:#94a3b8; }
+  body.teacher .row .k { color:#86d9c5; }
+  .row .v { font-weight:600; }
+
+  .badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge.green { background:#064e3b; color:#6ee7b7; }
+  .badge.red { background:#7f1d1d; color:#fca5a5; }
+  .badge.gray { background:#334155; color:#cbd5e1; }
+  .badge.blue { background:#1e3a8a; color:#93c5fd; }
+  .badge.amber { background:#78350f; color:#fcd34d; }
+  .badge.purple { background:#4c1d95; color:#c4b5fd; }
+
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { padding:8px 6px; text-align:left; font-size:11px; }
+  td { padding:8px 6px; border-bottom:1px solid rgba(148,163,184,.15); }
+  .rank-1 td { background:rgba(251,191,36,.13); }
+  .rank-2 td { background:rgba(148,163,184,.1); }
+  .rank-3 td { background:rgba(180,83,9,.13); }
+  .medal { font-size:14px; }
+
+  .lookup { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:8px; }
+  .lk { background:#0f172a; border-radius:5px; padding:5px 2px; text-align:center; font-size:9px; border:1px solid #1e293b; }
+  .lk .c { color:#818cf8; font-weight:700; }
+  .lk .n { color:#64748b; }
+
+  .formula { background:#0f172a; border-radius:8px; padding:10px; font-size:12px; color:#a5b4fc; text-align:center; margin:8px 0; line-height:1.6; }
+  .hint { font-size:11px; color:#64748b; margin-top:4px; line-height:1.5; }
+  .calc-display { background:#0f172a; border-radius:10px; padding:14px; text-align:center; margin:10px 0; }
+  .calc-display .big { font-size:32px; font-weight:800; color:#818cf8; }
+  .calc-display .ok { color:#6ee7b7; }
+  .calc-display .no { color:#fca5a5; }
+
+  .nonce-pick { display:flex; gap:6px; margin:10px 0; flex-wrap:wrap; }
+  .np { flex:1 1 28%; min-width:54px; padding:16px 0; text-align:center; border-radius:10px; background:#1e293b; border:2px solid #334155; cursor:pointer; font-size:20px; font-weight:700; }
+  body.student .np { background:#0f172a; }
+  .np.active { border-color:#818cf8; background:#312e81; color:#fff; }
+
+  .empty { text-align:center; color:#64748b; padding:22px; font-size:13px; line-height:1.6; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#4f46e5; color:#fff; padding:12px 20px; border-radius:30px; font-size:13px; z-index:999; box-shadow:0 4px 20px rgba(0,0,0,.5); max-width:90%; text-align:center; }
+  .pill { font-size:11px; color:#fbbf24; font-weight:700; }
+  .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+  .dot-live { background:#22c55e; box-shadow:0 0 8px #22c55e; animation:pulse 1.4s infinite; }
+  .dot-wait { background:#64748b; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+
+  .my-points { border-radius:14px; padding:18px; text-align:center; margin-bottom:13px; }
+  .my-points .num { font-size:40px; font-weight:800; color:#fff; }
+  .my-points .lbl { font-size:12px; color:#e0e7ff; }
+  .my-points .gtag { display:inline-block; margin-top:8px; }
+
+  .scroll-x { overflow-x:auto; }
+  .small-note { font-size:10px; color:#64748b; text-align:center; margin-top:12px; line-height:1.6; }
+
+  /* === 정보 바 (교수) === */
+  .info-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:13px; border-radius:12px; padding:12px 8px; }
+  .info-bar .it { text-align:center; }
+  .info-bar .it .v { font-size:16px; font-weight:800; color:#fff; }
+  .info-bar .it .l { font-size:10px; color:#86d9c5; margin-top:3px; }
+
+  /* === 블록체인 시각화 === */
+  .chain-wrap { overflow-x:auto; padding:10px 4px; margin-bottom:13px; }
+  .chain { display:flex; align-items:stretch; gap:0; min-width:min-content; }
+  .chain-block { flex:0 0 auto; width:130px; border-radius:10px; padding:9px; font-size:9.5px; position:relative; border:2px solid; }
+  .chain-block .bh { font-size:10px; font-weight:800; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; }
+  .chain-block .bl { display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dotted rgba(255,255,255,.15); }
+  .chain-block .bl:last-child { border-bottom:none; }
+  .chain-block .bl .lk2 { opacity:.65; }
+  .chain-block .bl .vv { font-weight:700; max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right; }
+  .chain-block.mined { border-color:#22c55e; }
+  .chain-block.current { border-color:#f59e0b; box-shadow:0 0 12px rgba(245,158,11,.4); }
+  .chain-block.pending { border-style:dashed; opacity:.55; }
+  body.student .chain-block { background:#1e293b; border-color:#334155; }
+  body.teacher .chain-block { background:#0f2e26; border-color:#1d4d40; }
+  .chain-link { flex:0 0 auto; align-self:center; font-size:16px; color:#64748b; padding:0 2px; }
+  .chain-block .hashval { color:#6ee7b7; }
+  .chain-block .lock { font-size:11px; }
+
+  /* === 최종 결과 화면 === */
+  .stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:10px 0; }
+  .stat-box { border-radius:10px; padding:12px; text-align:center; }
+  body.teacher .stat-box { background:#072019; border:1px solid #1d4d40; }
+  body.student .stat-box { background:#0f172a; border:1px solid #334155; }
+  .stat-box .sv { font-size:22px; font-weight:800; color:#34d399; }
+  .stat-box .sl { font-size:10px; color:#94a3b8; margin-top:3px; }
+  .podium { display:flex; align-items:flex-end; justify-content:center; gap:8px; margin:16px 0; }
+  .pod { flex:1; max-width:100px; border-radius:10px 10px 0 0; padding:10px 4px; text-align:center; }
+  .pod .pn { font-size:12px; font-weight:700; color:#fff; }
+  .pod .ps { font-size:11px; color:rgba(255,255,255,.85); }
+  .pod .pm { font-size:22px; }
+  .pod.p1 { background:linear-gradient(180deg,#fbbf24,#d97706); height:120px; }
+  .pod.p2 { background:linear-gradient(180deg,#cbd5e1,#64748b); height:95px; }
+  .pod.p3 { background:linear-gradient(180deg,#d8a06c,#b45309); height:75px; }
+
+  .mode-banner { background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.4); border-radius:8px; padding:8px 10px; font-size:11px; color:#fcd34d; margin-bottom:12px; text-align:center; line-height:1.5; }
+
+  /* === 방 코드 / QR === */
+  .room-card { text-align:center; }
+  .code-big { font-size:30px; font-weight:800; letter-spacing:5px; color:#fff; background:#0f172a; border:1px dashed #475569; border-radius:10px; padding:14px; margin:6px 0; }
+  body.teacher .code-big { background:#072019; border-color:#1d6152; }
+  .qr-img { width:170px; height:170px; background:#fff; border-radius:10px; padding:8px; margin:10px auto; display:block; }
+  .copy-row { display:flex; gap:8px; }
+  .copy-row button { flex:1; }
+
+  /* === 그룹 === */
+  .group-head { font-size:13px; font-weight:700; margin:14px 0 6px; display:flex; align-items:center; gap:6px; color:#fcd34d; }
+  body.student .group-head { color:#c4b5fd; }
+  .grouptag { background:#4c1d95; color:#c4b5fd; }
+  body.teacher .grouptag { background:#064e3b; color:#6ee7b7; }
+  .group-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:8px; }
+  .group-mini { border-radius:8px; padding:8px; font-size:11px; }
+  body.teacher .group-mini { background:#072019; border:1px solid #1d4d40; }
+  body.student .group-mini { background:#0f172a; border:1px solid #334155; }
+  .group-mini .gt { font-weight:800; color:#fbbf24; }
+</style>
+</head>
+<body class="login">
+<div class="app" id="app"></div>
+
+<script>
+/* ============================================================
+   블록체인 채굴 게임 (서버리스 멀티 디바이스 버전)
+   ------------------------------------------------------------
+   ● Firebase 불필요. 가입/API 키 없이 무료 공개 JSON 저장소
+     (jsonblob.com)에 "방(room)"을 만들어 여러 스마트폰이
+     같은 게임에 접속합니다.
+   ● 교수자가 방을 만들면 [방 코드 + QR]이 생성됩니다.
+     학생은 코드 입력(또는 QR 스캔)으로 참여합니다.
+   ● 실제 수업(여러 기기)에서 쓰려면 이 HTML 파일을 웹에
+     올려(예: GitHub Pages, 학교 서버, 공유 호스팅) 그 주소를
+     학생들이 열도록 하세요. 같은 파일을 각자 내려받아 열고
+     '방 코드'만 공유해도 동작합니다.
+   ● 네트워크 연결이 안 되면 자동으로 '오프라인(이 기기 전용)'
+     모드로 전환되어 단독 테스트가 가능합니다.
+   ============================================================ */
+
+/* ---------- 동기화(SYNC) 레이어 ---------- */
+const SYNC = {
+  base: "https://jsonblob.com/api/jsonBlob",
+  roomId: null,         // 방 코드(= 저장소 blob id)
+  mode: "offline",      // "cloud" | "offline"
+};
+const LS_ROOM   = "bcmine_room";        // 마지막 방 코드 기억
+const LS_SESS   = "bcmine_session";     // 로그인 세션 기억(새로고침 유지)
+const LS_PW     = "bcmine_teacherpw";   // 교수자 비밀번호(이 기기에만 저장, 공유 안 함)
+const TEACHER_INIT_PW = "dfm";
+
+function offlineKey(){ return "bcmine_offline_" + (SYNC.roomId || "local"); }
+function myLocalKey(){ return "bcmine_mysubs_" + (SYNC.roomId||"local") + "_" + (session.sid||"x"); }
+
+/* ---------- 룩업표 ---------- */
+const LOOKUP = {};
+for (let i=0;i<26;i++){ LOOKUP[String.fromCharCode(65+i)] = 65+i; }
+
+/* ---------- 공유 데이터 모델 ----------
+   공유 문서에는 비밀번호를 저장하지 않습니다(공개 저장소 보호).
+   포인트는 저장하지 않고 제출 기록에서 항상 재계산합니다(충돌 방지). */
+function defaultDB(){
+  return {
+    v: 0,                                   // 버전(쓰기마다 증가)
+    school: "",
+    teacherName: "",
+    startedAt: null,
+    config: { totalBlocks:8, scoreMode:3, nonceMax:3, groupSize:0 },
+    started:false,
+    currentBlock:0,
+    genesisPrev:212,
+    blocks:[],          // {idx,course,student,grade,prevHash,hash,correctNonce,correctHash,open}
+    students:{},        // sid -> {name, joinedAt}
+    submissions:[],     // {block,name,sid,hash,nonce,correct,time}  (append-only)
+    groups:{ enabled:false, size:0, count:0, assignment:{}, dividedAt:null }, // assignment: sid->그룹번호
+  };
+}
+let DB = defaultDB();
+let myLocalSubs = [];   // 학생: 내가 제출한 기록(자가복구용)
+
+/* ---------- 저장소 통신 ---------- */
+async function createRoom(initial){
+  try{
+    const res = await fetch(SYNC.base, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+      body: JSON.stringify(initial)
+    });
+    if(!res.ok) return null;
+    const loc = res.headers.get("Location") || res.headers.get("X-jsonblob") || res.headers.get("x-jsonblob");
+    if(!loc) return null;
+    return loc.split("/").pop();
+  }catch(e){ return null; }
+}
+async function fetchRoom(id){
+  const res = await fetch(SYNC.base + "/" + id, { headers:{ "Accept":"application/json" }, cache:"no-store" });
+  if(!res.ok) throw new Error("fetch "+res.status);
+  return await res.json();
+}
+async function putRoom(id, db){
+  const res = await fetch(SYNC.base + "/" + id, {
+    method:"PUT",
+    headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+    body: JSON.stringify(db)
+  });
+  return res.ok;
+}
+
+/* ---------- 정규화 ---------- */
+function arr(x){ if(!x) return []; if(Array.isArray(x)) return x.filter(e=>e!=null); return Object.values(x); }
+function normalize(v){
+  const d = Object.assign(defaultDB(), v||{});
+  d.config = Object.assign({totalBlocks:8,scoreMode:3,nonceMax:3,groupSize:0}, v && v.config || {});
+  d.blocks = arr(v && v.blocks);
+  d.submissions = arr(v && v.submissions);
+  d.students = (v && v.students) || {};
+  d.groups = Object.assign({enabled:false,size:0,count:0,assignment:{},dividedAt:null}, v && v.groups || {});
+  if(!d.groups.assignment) d.groups.assignment = {};
+  return d;
+}
+
+/* ============================================================
+   해시 로직
+   ============================================================ */
+function letterVal(ch){ if(!ch) return 0; return LOOKUP[ch.toUpperCase()] || 0; }
+function lastTwo(n){ return Math.abs(n)%100; }
+function calcHash(block, nonce){
+  const a = letterVal((block.course||"").trim()[0]);
+  const b = letterVal((block.student||"").trim()[0]);
+  const c = letterVal((block.grade||"").trim()[0]);
+  const prevTwo = lastTwo(block.prevHash);
+  return { hash: nonce + a + b + c - prevTwo, a, b, c, prevTwo };
+}
+function findCorrectNonce(block, nonceMax){
+  const max = Math.max(3, nonceMax||3);
+  for(let n=1;n<=max;n++){
+    const r = calcHash(block,n);
+    if(r.hash % 3 === 0) return { nonce:n, hash:r.hash };
+  }
+  return null;
+}
+
+/* ============================================================
+   포인트/순위 (제출기록에서 재계산 — 저장하지 않음)
+   ============================================================ */
+function scoreTable(){
+  const m = DB.config.scoreMode;
+  return m===1?[1]:m===2?[2,1]:[3,2,1];
+}
+function computePoints(){
+  const pts = {};
+  Object.keys(DB.students).forEach(sid=>pts[sid]=0);
+  const table = scoreTable();
+  for(let b=1;b<=DB.config.totalBlocks;b++){
+    const correct = DB.submissions.filter(s=>s.block===b && s.correct).sort((a,b)=>a.time-b.time);
+    correct.forEach((s,i)=>{ pts[s.sid] = (pts[s.sid]||0) + (table[i]||0); });
+  }
+  return pts;
+}
+function awardedFor(s){
+  if(!s.correct) return 0;
+  const table = scoreTable();
+  const correct = DB.submissions.filter(x=>x.block===s.block && x.correct).sort((a,b)=>a.time-b.time);
+  const rank = correct.findIndex(x=>x.sid===s.sid);
+  return table[rank]||0;
+}
+function rankArray(){
+  const pts = computePoints();
+  return Object.entries(DB.students)
+    .map(([sid,v])=>({ sid, name:v.name, points:pts[sid]||0, group:DB.groups.assignment[sid]||0 }))
+    .sort((a,b)=>b.points-a.points || a.name.localeCompare(b.name));
+}
+/* 그룹별 순위 {그룹번호: [정렬된 학생...]} */
+function groupedRank(){
+  const all = rankArray();
+  const out = {};
+  all.forEach(p=>{ const g = p.group||0; (out[g]=out[g]||[]).push(p); });
+  Object.values(out).forEach(list=>list.sort((a,b)=>b.points-a.points));
+  return out;
+}
+
+/* ============================================================
+   랜덤 문제 생성
+   ============================================================ */
+const RAND_COURSES = ["Parks 320","Math 101","Bio 210","Chem 305","Eng 220","Hist 150","Phys 410","Art 130","Geo 240","Music 110","Stat 360","Lang 270"];
+const RAND_GRADES = ["A","B","C","D","F"];
+function randHex(len){ const h="0123456789abcdef"; let s=""; for(let i=0;i<len;i++) s+=h[Math.floor(Math.random()*16)]; return s; }
+function randLetter(){ return String.fromCharCode(97+Math.floor(Math.random()*26)); }
+function randProblem(){
+  return { course: RAND_COURSES[Math.floor(Math.random()*RAND_COURSES.length)],
+           student: randLetter()+randHex(5),
+           grade: RAND_GRADES[Math.floor(Math.random()*RAND_GRADES.length)] };
+}
+
+/* ============================================================
+   세션
+   ============================================================ */
+let session = { role:null, name:null, sid:null };
+function saveSession(){ try{ localStorage.setItem(LS_SESS, JSON.stringify(session)); }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem(LS_SESS); }catch(e){} }
+
+/* ============================================================
+   동기화 1회 (역할 기반 병합)
+   - 교수자: 구조 필드의 권한자. 원격의 학생/제출만 흡수해 보관.
+   - 학생: 원격(교수자의 최신 구조)을 채택하고, 내 명단/내 제출만 보장.
+   ============================================================ */
+let pushPending = false;
+async function syncOnce(forcePush){
+  if(SYNC.mode!=="cloud"){ loadOffline(); render(); return; }
+  let remote;
+  try{ remote = normalize(await fetchRoom(SYNC.roomId)); }
+  catch(e){ render(); return; }   // 일시적 실패는 그냥 통과
+
+  let changed = false;
+
+  if(session.role==="teacher"){
+    // 원격의 학생/제출 흡수(합집합)
+    Object.keys(remote.students).forEach(sid=>{
+      if(!DB.students[sid]){ DB.students[sid]=remote.students[sid]; changed=true; }
+    });
+    remote.submissions.forEach(s=>{
+      if(!DB.submissions.some(x=>x.block===s.block && x.sid===s.sid)){ DB.submissions.push(s); changed=true; }
+    });
+    // 그룹 분할 후 들어온 늦은 참여자 자동 배정(가장 적은 그룹)
+    if(autoAssignLate()) changed = true;
+    if(forcePush) changed = true;
+  } else {
+    // 학생: 교수자 구조를 그대로 채택
+    const base = remote;
+    if(!base.students[session.sid]){
+      base.students[session.sid] = { name:session.name, joinedAt:Date.now() }; changed = true;
+    } else if(base.students[session.sid].name !== session.name){
+      base.students[session.sid].name = session.name; changed = true;
+    }
+    myLocalSubs.forEach(ls=>{
+      if(!base.submissions.some(s=>s.block===ls.block && s.sid===ls.sid)){ base.submissions.push(ls); changed = true; }
+    });
+    DB = base;
+  }
+
+  if(changed){
+    DB.v = (remote.v||0) + 1;
+    try{ await putRoom(SYNC.roomId, DB); }catch(e){}
+  }
+  try{ localStorage.setItem(offlineKey(), JSON.stringify(DB)); }catch(e){}
+  render();
+}
+function autoAssignLate(){
+  if(!DB.groups.enabled || !DB.groups.count) return false;
+  const counts = {};
+  for(let g=1; g<=DB.groups.count; g++) counts[g]=0;
+  Object.values(DB.groups.assignment).forEach(g=>{ if(counts[g]!=null) counts[g]++; });
+  let changed=false;
+  Object.keys(DB.students).forEach(sid=>{
+    if(!DB.groups.assignment[sid]){
+      let min=1; for(let g=2; g<=DB.groups.count; g++){ if(counts[g]<counts[min]) min=g; }
+      DB.groups.assignment[sid]=min; counts[min]++; changed=true;
+    }
+  });
+  return changed;
+}
+/* 즉시 반영 푸시 */
+async function pushNow(){
+  if(SYNC.mode!=="cloud"){ saveOffline(); render(); return; }
+  await syncOnce(true);
+}
+function loadOffline(){
+  try{ const d = JSON.parse(localStorage.getItem(offlineKey())); if(d) DB = normalize(d); }catch(e){}
+}
+function saveOffline(){
+  DB.v = (DB.v||0)+1;
+  try{ localStorage.setItem(offlineKey(), JSON.stringify(DB)); }catch(e){}
+}
+
+/* ============================================================
+   라우터
+   ============================================================ */
+const app = document.getElementById("app");
+function setBodyClass(c){ document.body.className = c; }
+function render(){
+  if(!session.role){ setBodyClass("login"); renderLogin(); return; }
+  if(session.role==="teacher"){ setBodyClass("teacher"); renderTeacher(); }
+  else { setBodyClass("student"); renderStudent(); }
+}
+
+/* ============================================================
+   로그인
+   ============================================================ */
+let loginRole = "teacher";
+let prefillRoom = "";
+function modeBadge(){
+  return SYNC.mode==="cloud"
+    ? '<span class="badge green">🌐 온라인 · 방 코드 '+esc(SYNC.roomId? short(SYNC.roomId):'')+'</span>'
+    : '<span class="badge gray">💾 오프라인(이 기기 전용)</span>';
+}
+function short(id){ return String(id).slice(-6).toUpperCase(); } // 표시용 짧은 코드(끝 6자리)
+function renderLogin(){
+  app.innerHTML = `
+  <div class="header">
+    <h1>🔗 블록체인 채굴 게임</h1>
+    <div class="sub">성적 블록체인 채굴 시뮬레이션</div>
+  </div>
+  <div class="content">
+    <div style="text-align:center;margin-bottom:12px">${modeBadge()}</div>
+    <div class="role-select">
+      <div class="role-btn ${loginRole==='teacher'?'active':''}" onclick="setLoginRole('teacher')">
+        <div class="ico">👨‍🏫</div><div class="lbl">교수자</div>
+      </div>
+      <div class="role-btn ${loginRole==='student'?'active':''}" onclick="setLoginRole('student')">
+        <div class="ico">🧑‍🎓</div><div class="lbl">학생</div>
+      </div>
+    </div>
+    <div class="card">
+      ${loginRole==='teacher' ? `
+        <h2>👨‍🏫 교수자 로그인</h2>
+        <label>이름</label>
+        <input id="t_name" placeholder="이름 입력" autocomplete="off">
+        <label>고등학교 명</label>
+        <input id="t_school" placeholder="예: OO고등학교" autocomplete="off">
+        <label>패스워드</label>
+        <input id="t_pw" type="password" autocomplete="new-password" placeholder="">
+        <button class="primary" onclick="teacherLogin()">로그인 / 방 만들기</button>
+        <div class="hint">로그인하면 학생이 접속할 <b>방 코드와 QR</b>이 생성됩니다.</div>
+      ` : `
+        <h2>🧑‍🎓 학생 로그인</h2>
+        <label>방 코드 (교수자 화면에 표시)</label>
+        <input id="s_room" placeholder="방 코드 입력" autocomplete="off" value="${esc(prefillRoom)}">
+        <label>이름</label>
+        <input id="s_name" placeholder="이름 입력" autocomplete="off">
+        <label>학번</label>
+        <input id="s_sid" placeholder="학번 입력" autocomplete="off">
+        <button class="primary" onclick="studentLogin()">참가하기</button>
+        <div class="hint">※ 같은 학번으로 다시 들어오면 누적 점수가 유지됩니다.</div>
+      `}
+    </div>
+    <div class="small-note">
+      여러 스마트폰으로 함께 하려면 이 페이지를 <b>웹 주소로 공유</b>하거나,<br>
+      같은 파일을 각자 열고 <b>방 코드</b>만 공유하세요.
+    </div>
+  </div>`;
+}
+function setLoginRole(r){ loginRole=r; renderLogin(); }
+
+async function teacherLogin(){
+  const name = document.getElementById("t_name").value.trim();
+  const school = document.getElementById("t_school").value.trim();
+  const pw = document.getElementById("t_pw").value;
+  if(!name){ toast("이름을 입력하세요"); return; }
+  if(!school){ toast("고등학교 명을 입력하세요"); return; }
+  const savedPw = localStorage.getItem(LS_PW) || TEACHER_INIT_PW;
+  if(pw !== savedPw){ toast("패스워드가 올바르지 않습니다"); return; }
+
+  toast("방을 준비하는 중...");
+  // 기존 방 재사용 시도
+  let reused = false;
+  const lastRoom = localStorage.getItem(LS_ROOM);
+  if(lastRoom){
+    try{ const r = await fetchRoom(lastRoom); if(r){ SYNC.roomId=lastRoom; SYNC.mode="cloud"; DB=normalize(r); reused=true; } }catch(e){}
+  }
+  if(!reused){
+    DB = defaultDB();
+    DB.school = school; DB.teacherName = name;
+    const id = await createRoom(DB);
+    if(id){ SYNC.roomId=id; SYNC.mode="cloud"; localStorage.setItem(LS_ROOM,id); }
+    else { SYNC.mode="offline"; SYNC.roomId=null; saveOffline(); }
+  }
+  DB.school = school; DB.teacherName = name;
+  session = { role:"teacher", name, sid:null };
+  saveSession();
+  await pushNow();
+  render();
+}
+
+async function studentLogin(){
+  const room = (document.getElementById("s_room")?.value || "").trim();
+  const name = document.getElementById("s_name").value.trim();
+  const sid = document.getElementById("s_sid").value.trim();
+  if(!room){ toast("방 코드를 입력하세요"); return; }
+  if(!name || !sid){ toast("이름과 학번을 입력하세요"); return; }
+  // 방 접속 시도
+  try{
+    const r = await fetchRoom(room);
+    if(!r){ toast("방을 찾을 수 없습니다. 코드를 확인하세요."); return; }
+    SYNC.roomId = room; SYNC.mode = "cloud"; DB = normalize(r);
+    localStorage.setItem(LS_ROOM, room);
+  }catch(e){
+    toast("방에 연결할 수 없습니다. 코드/네트워크를 확인하세요.");
+    return;
+  }
+  session = { role:"student", name, sid };
+  saveSession();
+  // 내 로컬 제출기록 복원
+  try{ myLocalSubs = JSON.parse(localStorage.getItem(myLocalKey())) || []; }catch(e){ myLocalSubs=[]; }
+  await pushNow();
+  render();
+}
+function logout(){
+  session={role:null,name:null,sid:null};
+  clearSession();
+  render();
+}
+
+/* ============================================================
+   블록체인 시각화
+   ============================================================ */
+function chainHTML(forRole){
+  const total = DB.config.totalBlocks;
+  let blocks = "";
+  for(let i=1;i<=total;i++){
+    const b = DB.blocks[i-1];
+    let cls, header, body;
+    if(b){
+      const isCur = (i===DB.currentBlock && b.open);
+      cls = isCur ? "current" : "mined";
+      const lock = isCur ? '⛏️' : '🔒';
+      header = `<div class="bh"><span># ${i}</span><span class="lock">${lock}</span></div>`;
+      const showHash = (forRole==="teacher") || (!b.open);
+      body = `
+        <div class="bl"><span class="lk2">과목</span><span class="vv">${esc(b.course)}</span></div>
+        <div class="bl"><span class="lk2">공개키</span><span class="vv">${esc(b.student)}</span></div>
+        <div class="bl"><span class="lk2">성적</span><span class="vv">${esc(b.grade)}</span></div>
+        <div class="bl"><span class="lk2">정답해시</span><span class="vv hashval">${showHash ? (b.correctHash ?? '-') : '🔒채굴중'}</span></div>`;
+    } else {
+      cls = "pending";
+      header = `<div class="bh"><span># ${i}</span><span class="lock">⏳</span></div>`;
+      body = `<div style="text-align:center;padding:14px 0;color:#64748b">미출제</div>`;
+    }
+    blocks += `<div class="chain-block ${cls}">${header}${body}</div>`;
+    if(i<total) blocks += `<div class="chain-link">⛓️</div>`;
+  }
+  return `<div class="chain-wrap"><div class="chain">${blocks}</div></div>`;
+}
+
+/* ============================================================
+   교수자 페이지
+   ============================================================ */
+let teacherTab = "room";
+function renderTeacher(){
+  app.innerHTML = `
+  <div class="header">
+    <h1>🔗 블록체인 채굴 게임</h1>
+    <div class="sub">교수자 콘솔 · 채굴 관리</div>
+    <div class="userbar">
+      <span>${esc(session.name)} 교수님</span>
+      ${SYNC.mode==="cloud" ? `<span class="room-chip">방 ${esc(short(SYNC.roomId))}</span>` : `<span class="room-chip">오프라인</span>`}
+      <button class="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="content">
+    ${teacherInfoBar()}
+    ${chainHTML("teacher")}
+    <div class="tabs">
+      <div class="tab ${teacherTab==='room'?'active':''}" onclick="setTTab('room')">방/접속</div>
+      <div class="tab ${teacherTab==='create'?'active':''}" onclick="setTTab('create')">출제</div>
+      <div class="tab ${teacherTab==='results'?'active':''}" onclick="setTTab('results')">제출결과</div>
+      <div class="tab ${teacherTab==='rank'?'active':''}" onclick="setTTab('rank')">랭킹</div>
+      <div class="tab ${teacherTab==='final'?'active':''}" onclick="setTTab('final')">결과</div>
+      <div class="tab ${teacherTab==='config'?'active':''}" onclick="setTTab('config')">설정</div>
+    </div>
+    <div id="tbody"></div>
+  </div>`;
+  renderTeacherTab();
+}
+function setTTab(t){ teacherTab=t; renderTeacher(); }
+
+function teacherInfoBar(){
+  const participants = Object.keys(DB.students).length;
+  const startStr = DB.startedAt ? fmtDate(DB.startedAt) : "미시작";
+  return `
+  <div class="info-bar">
+    <div class="it"><div class="v">${esc(DB.school||'-')}</div><div class="l">🏫 고등학교</div></div>
+    <div class="it"><div class="v" style="font-size:12px">${startStr}</div><div class="l">📅 실습 시작</div></div>
+    <div class="it"><div class="v">${participants}명</div><div class="l">👥 참여자</div></div>
+  </div>`;
+}
+
+function renderTeacherTab(){
+  const el = document.getElementById("tbody");
+  if(teacherTab==="room") el.innerHTML = teacherRoomHTML();
+  else if(teacherTab==="create") el.innerHTML = teacherCreateHTML();
+  else if(teacherTab==="results") el.innerHTML = teacherResultsHTML();
+  else if(teacherTab==="rank") el.innerHTML = teacherRankHTML();
+  else if(teacherTab==="final") el.innerHTML = finalResultHTML("teacher");
+  else el.innerHTML = teacherConfigHTML();
+}
+
+/* ----- 방/접속 안내 탭 ----- */
+function joinTarget(){
+  // 호스팅된 페이지면 접속 링크, 파일이면 방 코드만
+  const isHttp = location.protocol.startsWith("http");
+  if(isHttp){ return location.origin + location.pathname + "#room=" + SYNC.roomId; }
+  return SYNC.roomId || "";
+}
+function teacherRoomHTML(){
+  if(SYNC.mode!=="cloud"){
+    return `<div class="card"><h2>💾 오프라인 모드</h2>
+      <div class="empty">현재 네트워크 저장소에 연결되지 않아<br>이 기기에서만 동작합니다.<br><br>
+      여러 스마트폰으로 함께 하려면 이 파일을 <b>웹 주소</b>로 올린 뒤 다시 접속하세요.</div></div>`;
+  }
+  const target = joinTarget();
+  const qr = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" + encodeURIComponent(target);
+  const isHttp = location.protocol.startsWith("http");
+  return `
+  <div class="card room-card">
+    <h2>📲 학생 접속 안내</h2>
+    <div class="hint">학생은 <b>학생</b>으로 선택 후 아래 방 코드를 입력합니다.</div>
+    <div class="code-big">${esc(SYNC.roomId)}</div>
+    <div class="copy-row">
+      <button class="mini" style="background:#0d9488" onclick="copyText('${esc(SYNC.roomId)}','방 코드')">방 코드 복사</button>
+      <button class="mini" style="background:#6366f1" onclick="copyText('${esc(target)}','${isHttp?'접속 링크':'방 코드'}')">${isHttp?'접속 링크 복사':'코드 복사'}</button>
+    </div>
+    <img class="qr-img" src="${qr}" alt="QR" onerror="this.style.display='none'">
+    <div class="hint">${isHttp
+      ? 'QR을 스캔하면 이 페이지가 열리고 방 코드가 자동 입력됩니다.'
+      : '※ 로컬 파일이라 QR은 방 코드를 담습니다. 학생은 같은 파일을 열고 코드를 입력하세요.'}</div>
+  </div>
+  <div class="card">
+    <h2>👥 현재 참여자 (${Object.keys(DB.students).length}명)</h2>
+    ${Object.keys(DB.students).length===0
+      ? `<div class="empty">아직 참여한 학생이 없습니다.</div>`
+      : `<div class="scroll-x"><table><tr><th>이름</th><th>학번</th><th>그룹</th></tr>
+        ${Object.entries(DB.students).map(([sid,v])=>`<tr>
+          <td>${esc(v.name)}</td><td>${esc(sid)}</td>
+          <td>${DB.groups.enabled && DB.groups.assignment[sid] ? '<span class="badge grouptag">'+DB.groups.assignment[sid]+'조</span>' : '-'}</td>
+        </tr>`).join("")}
+      </table></div>`}
+  </div>`;
+}
+function copyText(t, label){
+  navigator.clipboard?.writeText(t).then(()=>toast((label||'')+" 복사됨")).catch(()=>toast("복사 실패 — 직접 입력하세요"));
+}
+
+/* ----- 출제 탭 ----- */
+let pendingRand = null;
+function ensureRand(){ if(!pendingRand) pendingRand = randProblem(); return pendingRand; }
+function regenRand(){ pendingRand = randProblem(); renderTeacher(); }
+
+function teacherCreateHTML(){
+  const cfg = DB.config;
+  const cur = DB.currentBlock;
+  const total = cfg.totalBlocks;
+  const finished = DB.started && cur > total;
+
+  let statusCard = "";
+  if(!DB.started){
+    statusCard = `<div class="card"><div class="empty">아직 게임이 시작되지 않았습니다.<br>아래에서 첫 블록을 출제하면 자동으로 시작됩니다.</div></div>`;
+  } else if(finished){
+    statusCard = `<div class="card"><h2>🏁 게임 종료</h2><div class="empty">설정된 ${total}개 블록 출제가 모두 완료되었습니다.<br>'결과' 탭에서 최종 통계를 확인하세요.</div></div>`;
+  } else {
+    const block = DB.blocks[cur-1];
+    if(block && block.open){
+      const subs = DB.submissions.filter(s=>s.block===cur);
+      statusCard = `
+      <div class="card">
+        <h2><span class="status-dot dot-live"></span>현재 진행: 블록 #${cur} / ${total}</h2>
+        <div class="block-info">
+          <div class="row"><span class="k">과목 (Course)</span><span class="v">${esc(block.course)}</span></div>
+          <div class="row"><span class="k">학생 (Public Key)</span><span class="v">${esc(block.student)}</span></div>
+          <div class="row"><span class="k">성적 (Grade)</span><span class="v">${esc(block.grade)}</span></div>
+          <div class="row"><span class="k">이전 해시 끝2자리</span><span class="v">${lastTwo(block.prevHash)}</span></div>
+          <div class="row"><span class="k">정답 Nonce / 해시</span><span class="v" style="color:#6ee7b7">${block.correctNonce ?? '-'} / ${block.correctHash ?? '없음'}</span></div>
+          <div class="row"><span class="k">제출 인원</span><span class="v">${subs.length}명</span></div>
+        </div>
+        <button class="ghost" onclick="closeBlock()">▶ 이 블록 마감하고 다음 블록 준비</button>
+      </div>`;
+    }
+  }
+
+  let formCard = "";
+  const blockOpen = DB.started && DB.blocks[cur-1] && DB.blocks[cur-1].open && cur<=total;
+  if(!finished && !blockOpen){
+    const nextIdx = DB.started ? cur : 1;
+    const prevHashShow = nextIdx===1 ? DB.genesisPrev : (DB.blocks[nextIdx-2]?.hash ?? DB.genesisPrev);
+    const r = ensureRand();
+    formCard = `
+    <div class="card">
+      <h2>📝 블록 #${nextIdx} 출제 <span class="badge amber">Nonce 1∼${cfg.nonceMax}</span></h2>
+      <div class="mode-banner">🎲 아래는 랜덤 생성된 문제입니다. 그대로 출제하거나 일부를 수정하세요.</div>
+      <label>과목 (Course)</label>
+      <input id="c_course" value="${esc(r.course)}">
+      <label>학생 공개키 (Student Public Key)</label>
+      <input id="c_student" value="${esc(r.student)}">
+      <label>성적 (Grade)</label>
+      <select id="c_grade">
+        ${RAND_GRADES.map(g=>`<option ${g===r.grade?'selected':''}>${g}</option>`).join("")}
+      </select>
+      <div class="hint">이전 해시 끝 2자리: <b>${lastTwo(prevHashShow)}</b> (자동 연결)</div>
+      <button class="ghost" onclick="regenRand()">🎲 다시 랜덤 생성</button>
+      <button class="primary" onclick="createBlock()">📢 블록 출제 (학생에게 공개)</button>
+    </div>`;
+  }
+
+  const lookupCard = `
+  <div class="card">
+    <h2>🔢 룩업표 & 공식</h2>
+    <div class="formula">Hash = Nonce + a + b + c − (이전 해시 끝 2자리)<br>
+      <span style="font-size:11px;color:#86d9c5">a=과목 첫글자, b=학생키 첫글자, c=성적 / 정답은 Hash가 3의 배수가 되는 Nonce(1∼${cfg.nonceMax})</span></div>
+    <div class="lookup">
+      ${Object.keys(LOOKUP).map(k=>`<div class="lk"><div class="c">${k}</div><div class="n">${LOOKUP[k]}</div></div>`).join("")}
+    </div>
+  </div>`;
+
+  return statusCard + formCard + lookupCard;
+}
+
+function createBlock(){
+  const course = document.getElementById("c_course").value.trim();
+  const student = document.getElementById("c_student").value.trim();
+  const grade = document.getElementById("c_grade").value.trim();
+  if(!course || !student || !grade){ toast("모든 항목을 입력하세요"); return; }
+  if(!DB.started){ DB.started=true; DB.currentBlock=1; DB.startedAt=Date.now(); }
+  const idx = DB.currentBlock;
+  const prevHash = idx===1 ? DB.genesisPrev : DB.blocks[idx-2].hash;
+  const blockObj = { idx, course, student, grade, prevHash, hash:null, open:true };
+  const correct = findCorrectNonce(blockObj, DB.config.nonceMax);
+  blockObj.hash = correct ? correct.hash : calcHash(blockObj,1).hash;
+  blockObj.correctNonce = correct ? correct.nonce : null;
+  blockObj.correctHash = correct ? correct.hash : null;
+  DB.blocks[idx-1] = blockObj;
+  pendingRand = null;
+  pushNow();
+  toast(`블록 #${idx} 출제 완료! 학생들이 채굴을 시작합니다.`);
+  renderTeacher();
+}
+
+function closeBlock(){
+  const cur = DB.currentBlock;
+  if(DB.blocks[cur-1]) DB.blocks[cur-1].open = false;
+  DB.currentBlock = cur + 1;
+  pendingRand = null;
+  if(DB.currentBlock > DB.config.totalBlocks){ toast("모든 블록 출제 완료! 게임이 종료되었습니다."); teacherTab="final"; }
+  else { toast(`블록 #${cur} 마감. 다음 블록을 출제하세요.`); }
+  pushNow();
+  renderTeacher();
+}
+
+/* ----- 제출결과 탭 ----- */
+function teacherResultsHTML(){
+  if(!DB.started) return `<div class="card"><div class="empty">아직 게임이 시작되지 않았습니다.</div></div>`;
+  const list = [];
+  for(let i=1;i<=DB.config.totalBlocks;i++){
+    const subs = DB.submissions.filter(s=>s.block===i).sort((a,b)=>a.time-b.time);
+    if(DB.blocks[i-1]) list.push({i,subs,block:DB.blocks[i-1]});
+  }
+  if(list.length===0) return `<div class="card"><div class="empty">출제된 블록이 없습니다.</div></div>`;
+  const pts = computePoints();
+  return list.slice().reverse().map(({i,subs,block})=>{
+    const isCur = i===DB.currentBlock && block.open;
+    const correctList = subs.filter(s=>s.correct);
+    return `
+    <div class="card">
+      <h2>${isCur?'<span class="status-dot dot-live"></span>':''}블록 #${i} ${isCur?'(진행중)':'<span class="badge gray">마감</span>'}</h2>
+      <div class="hint" style="margin-bottom:8px">${esc(block.course)} · ${esc(block.student)} · 성적 ${esc(block.grade)} · 정답해시 <b style="color:#6ee7b7">${block.correctHash ?? '없음'}</b></div>
+      ${subs.length===0 ? `<div class="empty">제출 없음</div>` : `
+      <div class="scroll-x"><table>
+        <tr><th>순위</th><th>이름(학번)</th>${DB.groups.enabled?'<th>조</th>':''}<th>제출해시</th><th>정답</th><th>획득</th><th>총점</th></tr>
+        ${subs.map((s,ix)=>{
+          let medal = "";
+          if(s.correct){ const cr = correctList.findIndex(x=>x.sid===s.sid)+1; medal = cr===1?'🥇':cr===2?'🥈':cr===3?'🥉':''; }
+          return `<tr>
+            <td>${medal?'<span class="medal">'+medal+'</span>':(ix+1)}</td>
+            <td>${esc(s.name)}<br><span style="font-size:10px;color:#94a3b8">${esc(s.sid)}</span></td>
+            ${DB.groups.enabled?`<td>${DB.groups.assignment[s.sid]?DB.groups.assignment[s.sid]+'조':'-'}</td>`:''}
+            <td>${s.hash}</td>
+            <td>${s.correct?'<span class="badge green">정답</span>':'<span class="badge red">오답</span>'}</td>
+            <td><span class="pill">+${awardedFor(s)}</span></td>
+            <td>${pts[s.sid]||0}</td>
+          </tr>`;
+        }).join("")}
+      </table></div>`}
+    </div>`;
+  }).join("");
+}
+
+/* ----- 랭킹 탭 (그룹이면 그룹별) ----- */
+function rankTableHTML(list){
+  return `<table>
+    <tr><th>순위</th><th>이름(학번)</th><th>점수</th></tr>
+    ${list.map((s,i)=>{
+      const cls = i<3?`rank-${i+1}`:'';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+      return `<tr class="${cls}"><td><span class="medal">${medal}</span></td>
+        <td>${esc(s.name)} <span style="font-size:10px;color:#94a3b8">(${esc(s.sid)})</span></td>
+        <td><b>${s.points}점</b></td></tr>`;
+    }).join("")}
+  </table>`;
+}
+function teacherRankHTML(){
+  const all = rankArray();
+  if(all.length===0) return `<div class="card"><div class="empty">참가 학생이 없습니다.</div></div>`;
+  if(DB.groups.enabled){
+    const gr = groupedRank();
+    const groups = Object.keys(gr).map(Number).filter(g=>g>0).sort((a,b)=>a-b);
+    return `<div class="card"><h2>🏆 그룹별 랭킹 <span class="badge grouptag">${DB.groups.count}개 그룹</span></h2>
+      ${groups.map(g=>`<div class="group-head">🧩 ${g}조 (${gr[g].length}명)</div>${rankTableHTML(gr[g])}`).join("")}
+    </div>`;
+  }
+  return `<div class="card"><h2>🏆 점수 상위 10명</h2>${rankTableHTML(all.slice(0,10))}</div>`;
+}
+
+/* ----- 설정 탭 ----- */
+function teacherConfigHTML(){
+  const cfg = DB.config;
+  const participants = Object.keys(DB.students).length;
+  const g = DB.groups;
+  // 그룹 현황 요약
+  let groupSummary = "";
+  if(g.enabled && g.count){
+    const counts={}; for(let i=1;i<=g.count;i++) counts[i]=0;
+    Object.values(g.assignment).forEach(x=>{ if(counts[x]!=null) counts[x]++; });
+    groupSummary = `<div class="group-grid">${Object.keys(counts).map(k=>`<div class="group-mini"><span class="gt">${k}조</span> · ${counts[k]}명</div>`).join("")}</div>`;
+  }
+  return `
+  <div class="card">
+    <h2>⚙️ 게임 환경 설정</h2>
+    <label>블록 생성(출제) 횟수 (3∼10회)</label>
+    <select id="cfg_blocks">
+      ${[3,4,5,6,7,8,9,10].map(n=>`<option value="${n}" ${cfg.totalBlocks===n?'selected':''}>${n}회</option>`).join("")}
+    </select>
+    <div class="hint">기본값: 8회 ${DB.started?'<span style="color:#fca5a5">(진행 중 변경 불가)</span>':''}</div>
+
+    <label>점수 배분 방식</label>
+    <select id="cfg_score">
+      <option value="1" ${cfg.scoreMode===1?'selected':''}>1등에게만 부여 (1등 1점)</option>
+      <option value="2" ${cfg.scoreMode===2?'selected':''}>1∼2등 부여 (1등 2점, 2등 1점)</option>
+      <option value="3" ${cfg.scoreMode===3?'selected':''}>1∼3등 부여 (1등 3점, 2등 2점, 3등 1점)</option>
+    </select>
+    <div class="hint">정답자 중 빨리 제출한 순서대로 부여됩니다. ${DB.started?'<span style="color:#fca5a5">(진행 중 변경 불가)</span>':''}</div>
+
+    <label>난이도 — Nonce 범위</label>
+    <select id="cfg_nonce">
+      ${[3,4,5,6].map(n=>`<option value="${n}" ${cfg.nonceMax===n?'selected':''}>1∼${n}${n===3?' (기본·쉬움)':n===6?' (가장 어려움)':''}</option>`).join("")}
+    </select>
+    <div class="hint">범위가 넓을수록 학생이 더 많은 Nonce를 계산해야 합니다(작업량↑). 변경 즉시 학생 화면에 반영됩니다.</div>
+
+    <button class="primary" onclick="saveConfig()">설정 저장</button>
+  </div>
+
+  <div class="card">
+    <h2>🧩 그룹 나누기 <span class="badge grouptag">참여자 ${participants}명</span></h2>
+    <label>그룹당 최대 인원</label>
+    <input id="cfg_groupsize" type="number" min="1" max="50" value="${g.size||4}">
+    <div class="hint">참여자를 <b>무작위</b>로 섞어, 각 그룹이 이 인원을 넘지 않도록 <b>균등 분할</b>합니다.</div>
+    <div class="copy-row">
+      <button class="primary" style="margin-top:8px" onclick="divideGroups()">그룹 나누기 / 다시 섞기</button>
+      ${g.enabled?`<button class="ghost" style="margin-top:8px" onclick="clearGroups()">그룹 해제</button>`:''}
+    </div>
+    ${g.enabled?`<div class="hint" style="margin-top:10px;color:#fcd34d">현재 <b>${g.count}개 그룹</b>으로 분할됨 (그룹당 최대 ${g.size}명). 랭킹이 그룹 단위로 표시됩니다.</div>${groupSummary}`:''}
+  </div>
+
+  <div class="card">
+    <h2>🔐 패스워드 변경</h2>
+    <div class="hint" style="margin-bottom:6px">이 기기에만 저장됩니다(공유 안 됨).</div>
+    <label>새 패스워드</label>
+    <input id="cfg_pw" type="password" autocomplete="new-password">
+    <button class="ghost" onclick="changePw()">패스워드 변경</button>
+  </div>
+
+  <div class="card">
+    <h2>🗑️ 게임 초기화</h2>
+    <div class="hint">같은 방을 유지한 채 블록·제출·학생·그룹 데이터를 모두 비웁니다.</div>
+    <button class="primary danger" onclick="confirmReset()">전체 초기화</button>
+  </div>`;
+}
+function saveConfig(){
+  const blocks = parseInt(document.getElementById("cfg_blocks").value);
+  const score = parseInt(document.getElementById("cfg_score").value);
+  const nonce = parseInt(document.getElementById("cfg_nonce").value);
+  if(!DB.started){ DB.config.totalBlocks = blocks; DB.config.scoreMode = score; }
+  DB.config.nonceMax = nonce;   // 난이도는 진행 중에도 변경 가능
+  pushNow();
+  toast("설정이 저장되었습니다.");
+  renderTeacher();
+}
+function divideGroups(){
+  const size = parseInt(document.getElementById("cfg_groupsize").value);
+  if(!size || size<1){ toast("그룹 인원을 1 이상으로 설정하세요"); return; }
+  const sids = Object.keys(DB.students);
+  if(sids.length===0){ toast("참여 학생이 없습니다"); return; }
+  for(let i=sids.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [sids[i],sids[j]]=[sids[j],sids[i]]; }
+  const G = Math.ceil(sids.length/size);
+  const assignment={};
+  sids.forEach((sid,i)=>{ assignment[sid]=(i%G)+1; });   // 섞은 뒤 라운드로빈 → 균등 분할
+  DB.config.groupSize = size;
+  DB.groups = { enabled:true, size, count:G, assignment, dividedAt:Date.now() };
+  pushNow();
+  toast(`${G}개 그룹으로 무작위 분할했습니다.`);
+  renderTeacher();
+}
+function clearGroups(){
+  DB.groups = { enabled:false, size:0, count:0, assignment:{}, dividedAt:null };
+  pushNow();
+  toast("그룹을 해제했습니다.");
+  renderTeacher();
+}
+function changePw(){
+  const np = document.getElementById("cfg_pw").value.trim();
+  if(!np){ toast("패스워드를 입력하세요"); return; }
+  localStorage.setItem(LS_PW, np);
+  toast("패스워드가 변경되었습니다.");
+  renderTeacher();
+}
+function confirmReset(){
+  if(confirm("정말 모든 게임 데이터를 초기화하시겠습니까? (방 코드는 유지)")){
+    const school = DB.school, name = DB.teacherName;
+    DB = defaultDB();
+    DB.school = school; DB.teacherName = name;
+    pendingRand = null;
+    pushNow();
+    toast("초기화 완료");
+    teacherTab="room";
+    renderTeacher();
+  }
+}
+
+/* ============================================================
+   최종 결과 / 통계 화면 (교수·학생 공용)
+   ============================================================ */
+function finalResultHTML(role){
+  if(!DB.started){ return `<div class="card"><div class="empty">게임이 아직 시작되지 않았습니다.</div></div>`; }
+  const finished = DB.currentBlock > DB.config.totalBlocks;
+  const all = rankArray();
+  const totalSubs = DB.submissions.length;
+  const correctSubs = DB.submissions.filter(s=>s.correct).length;
+  const minedBlocks = DB.blocks.filter(b=>b && !b.open).length;
+  const participants = Object.keys(DB.students).length;
+  const accuracy = totalSubs ? Math.round(correctSubs/totalSubs*100) : 0;
+
+  const podium = all.slice(0,3);
+  const podiumHTML = podium.length ? `
+    <div class="podium">
+      ${podium[1] ? `<div class="pod p2"><div class="pm">🥈</div><div class="pn">${esc(podium[1].name)}</div><div class="ps">${esc(podium[1].sid)}</div><div class="ps"><b>${podium[1].points}점</b></div></div>`:''}
+      ${podium[0] ? `<div class="pod p1"><div class="pm">🥇</div><div class="pn">${esc(podium[0].name)}</div><div class="ps">${esc(podium[0].sid)}</div><div class="ps"><b>${podium[0].points}점</b></div></div>`:''}
+      ${podium[2] ? `<div class="pod p3"><div class="pm">🥉</div><div class="pn">${esc(podium[2].name)}</div><div class="ps">${esc(podium[2].sid)}</div><div class="ps"><b>${podium[2].points}점</b></div></div>`:''}
+    </div>` : '';
+
+  let rankSection;
+  if(DB.groups.enabled){
+    const gr = groupedRank();
+    const groups = Object.keys(gr).map(Number).filter(x=>x>0).sort((a,b)=>a-b);
+    rankSection = `<div class="card"><h2>🏆 그룹별 순위 <span class="badge grouptag">${DB.groups.count}개 그룹</span></h2>
+      ${groups.map(g=>`<div class="group-head">🧩 ${g}조 (${gr[g].length}명)</div><div class="scroll-x">${rankTableHTML(gr[g])}</div>`).join("")}
+    </div>`;
+  } else {
+    rankSection = `<div class="card"><h2>🏆 전체 순위</h2>
+      ${all.length===0?'<div class="empty">참가자 없음</div>':`<div class="scroll-x">${rankTableHTML(all)}</div>`}</div>`;
+  }
+
+  let card = `
+  <div class="card">
+    <h2>${finished?'🏁 최종 결과 & 통계':'📊 중간 통계'}</h2>
+    ${!finished?'<div class="mode-banner">아직 게임이 진행 중입니다. 종료 후 최종 결과가 확정됩니다.</div>':''}
+    <div class="hint">${esc(DB.school||'-')} · 시작 ${DB.startedAt?fmtDate(DB.startedAt):'-'} · Nonce 1∼${DB.config.nonceMax}${DB.groups.enabled?' · '+DB.groups.count+'개 그룹':''}</div>
+    ${podiumHTML}
+    <div class="stat-grid">
+      <div class="stat-box"><div class="sv">${minedBlocks}/${DB.config.totalBlocks}</div><div class="sl">채굴 완료 블록</div></div>
+      <div class="stat-box"><div class="sv">${participants}명</div><div class="sl">참여 학생</div></div>
+      <div class="stat-box"><div class="sv">${totalSubs}건</div><div class="sl">총 제출</div></div>
+      <div class="stat-box"><div class="sv">${accuracy}%</div><div class="sl">정답률</div></div>
+    </div>
+  </div>
+  ${rankSection}`;
+
+  if(role==="teacher"){
+    card += `
+    <div class="card">
+      <h2>📥 결과 다운로드</h2>
+      <div class="hint">고등학교명·시작일시·그룹 정보·블록/제출 내역을 Excel(.xls)로 저장합니다.</div>
+      <button class="primary" onclick="downloadExcel()">📊 Excel로 결과 다운로드</button>
+    </div>`;
+  }
+  return card;
+}
+
+/* ============================================================
+   Excel 다운로드 (HTML table 기반 .xls)
+   ============================================================ */
+function downloadExcel(){
+  const all = rankArray();
+  const pts = computePoints();
+  const esc2 = (s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>`;
+
+  // 1) 게임 정보
+  html += `<table border="1"><tr><th colspan="2">블록체인 채굴 게임 결과</th></tr>`;
+  html += `<tr><td>고등학교명</td><td>${esc2(DB.school)}</td></tr>`;
+  html += `<tr><td>교수자</td><td>${esc2(DB.teacherName)}</td></tr>`;
+  html += `<tr><td>게임 시작 일시</td><td>${DB.startedAt?fmtDate(DB.startedAt):'-'}</td></tr>`;
+  html += `<tr><td>총 블록 수</td><td>${DB.config.totalBlocks}</td></tr>`;
+  html += `<tr><td>난이도(Nonce 범위)</td><td>1∼${DB.config.nonceMax}</td></tr>`;
+  html += `<tr><td>점수 배분 방식</td><td>${DB.config.scoreMode===1?'1등 1점':DB.config.scoreMode===2?'1등2/2등1':'1등3/2등2/3등1'}</td></tr>`;
+  html += `<tr><td>참여 학생 수</td><td>${Object.keys(DB.students).length}</td></tr>`;
+  html += `<tr><td>총 제출 건수</td><td>${DB.submissions.length}</td></tr>`;
+  html += `<tr><td>그룹 분할</td><td>${DB.groups.enabled?`${DB.groups.count}개 그룹 (그룹당 최대 ${DB.groups.size}명, 분할 ${DB.groups.dividedAt?fmtDate(DB.groups.dividedAt):'-'})`:'미사용'}</td></tr>`;
+  html += `</table><br>`;
+
+  // 2) 전체 순위
+  html += `<table border="1"><tr><th>순위</th><th>이름</th><th>학번</th>${DB.groups.enabled?'<th>그룹</th>':''}<th>점수</th></tr>`;
+  all.forEach((s,i)=>{
+    html += `<tr><td>${i+1}</td><td>${esc2(s.name)}</td><td>${esc2(s.sid)}</td>${DB.groups.enabled?`<td>${s.group?s.group+'조':'-'}</td>`:''}<td>${s.points}</td></tr>`;
+  });
+  html += `</table><br>`;
+
+  // 3) 그룹별 순위 (그룹 사용 시)
+  if(DB.groups.enabled){
+    const gr = groupedRank();
+    const groups = Object.keys(gr).map(Number).filter(x=>x>0).sort((a,b)=>a-b);
+    html += `<table border="1"><tr><th colspan="4">그룹별 순위</th></tr>`;
+    groups.forEach(g=>{
+      html += `<tr><th colspan="4">${g}조 (${gr[g].length}명)</th></tr>`;
+      html += `<tr><th>그룹내순위</th><th>이름</th><th>학번</th><th>점수</th></tr>`;
+      gr[g].forEach((s,i)=>{ html += `<tr><td>${i+1}</td><td>${esc2(s.name)}</td><td>${esc2(s.sid)}</td><td>${s.points}</td></tr>`; });
+    });
+    html += `</table><br>`;
+
+    // 그룹 구성표
+    html += `<table border="1"><tr><th>그룹</th><th>이름</th><th>학번</th><th>점수</th></tr>`;
+    Object.entries(DB.students).forEach(([sid,v])=>{
+      const g = DB.groups.assignment[sid];
+      html += `<tr><td>${g?g+'조':'-'}</td><td>${esc2(v.name)}</td><td>${esc2(sid)}</td><td>${pts[sid]||0}</td></tr>`;
+    });
+    html += `</table><br>`;
+  }
+
+  // 4) 블록별 정보
+  html += `<table border="1"><tr><th>블록#</th><th>과목</th><th>학생공개키</th><th>성적</th><th>이전해시끝2자리</th><th>정답Nonce</th><th>정답해시</th></tr>`;
+  DB.blocks.forEach(b=>{ if(!b) return;
+    html += `<tr><td>${b.idx}</td><td>${esc2(b.course)}</td><td>${esc2(b.student)}</td><td>${esc2(b.grade)}</td><td>${lastTwo(b.prevHash)}</td><td>${b.correctNonce??'-'}</td><td>${b.correctHash??'-'}</td></tr>`;
+  });
+  html += `</table><br>`;
+
+  // 5) 전체 제출 내역
+  html += `<table border="1"><tr><th>블록#</th><th>이름</th><th>학번</th>${DB.groups.enabled?'<th>그룹</th>':''}<th>Nonce</th><th>제출해시</th><th>정답여부</th><th>획득점수</th><th>제출시각</th></tr>`;
+  DB.submissions.slice().sort((a,b)=>a.block-b.block||a.time-b.time).forEach(s=>{
+    const g = DB.groups.assignment[s.sid];
+    html += `<tr><td>${s.block}</td><td>${esc2(s.name)}</td><td>${esc2(s.sid)}</td>${DB.groups.enabled?`<td>${g?g+'조':'-'}</td>`:''}<td>${s.nonce}</td><td>${s.hash}</td><td>${s.correct?'정답':'오답'}</td><td>${awardedFor(s)}</td><td>${fmtDate(s.time)}</td></tr>`;
+  });
+  html += `</table></body></html>`;
+
+  const blob = new Blob(["\ufeff"+html], {type:"application/vnd.ms-excel"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `블록체인게임결과_${(DB.school||'game')}_${dateStr}.xls`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast("Excel 파일 다운로드 시작!");
+}
+
+/* ============================================================
+   학생 페이지
+   ============================================================ */
+let studentNonce = null;
+function renderStudent(){
+  const pts = computePoints();
+  const myPts = pts[session.sid] || 0;
+  const myGroup = DB.groups.enabled ? (DB.groups.assignment[session.sid]||null) : null;
+  const cur = DB.currentBlock;
+  const total = DB.config.totalBlocks;
+  const block = (DB.started && cur>=1 && cur<=total) ? DB.blocks[cur-1] : null;
+  const finished = DB.started && cur>total;
+  const nMax = DB.config.nonceMax;
+  const mySub = block ? DB.submissions.find(s=>s.block===cur && s.sid===session.sid) : null;
+  const alreadySubmitted = !!mySub;
+
+  let blockCard = "";
+  if(!DB.started){
+    blockCard = `<div class="card"><div class="empty"><span class="status-dot dot-wait"></span>아직 문제가 출제되지 않았습니다.<br>교수자의 출제를 기다려주세요.</div></div>`;
+  } else if(finished){
+    blockCard = `<div class="card"><h2>🏁 게임 종료</h2><div class="empty">모든 블록 채굴이 종료되었습니다.<br>아래에서 최종 결과를 확인하세요!</div></div>` + finalResultHTML("student");
+  } else if(!block || !block.open){
+    blockCard = `<div class="card"><div class="empty"><span class="status-dot dot-wait"></span>다음 블록 출제를 기다리는 중...</div></div>`;
+  } else {
+    blockCard = `
+    <div class="card">
+      <h2><span class="status-dot dot-live"></span>블록 #${cur} / ${total} 채굴 중 <span class="badge amber">Nonce 1∼${nMax}</span></h2>
+      <div class="block-info">
+        <div class="row"><span class="k">과목 (Course)</span><span class="v">${esc(block.course)}</span></div>
+        <div class="row"><span class="k">학생 (Public Key)</span><span class="v">${esc(block.student)}</span></div>
+        <div class="row"><span class="k">성적 (Grade)</span><span class="v">${esc(block.grade)}</span></div>
+        <div class="row"><span class="k">이전 해시 끝2자리</span><span class="v">${lastTwo(block.prevHash)}</span></div>
+      </div>
+      <div class="formula">Hash = Nonce + a + b + c − ${lastTwo(block.prevHash)}<br>
+        <span style="font-size:11px;color:#64748b">a, b, c 값은 룩업표를 참고해 직접 계산하세요 · 정답은 Hash가 3의 배수</span>
+      </div>
+      ${alreadySubmitted ? `
+        <div class="calc-display">
+          <div class="lbl" style="font-size:12px;color:#94a3b8">내 제출 (Nonce ${mySub.nonce})</div>
+          <div class="big ${mySub.correct?'ok':'no'}">${mySub.hash}</div>
+          <div>${mySub.correct?'<span class="badge green">정답! +'+awardedFor(mySub)+'점</span>':'<span class="badge red">오답</span>'}</div>
+        </div>
+        <div class="hint">이미 이 블록에 제출했습니다. 다음 블록을 기다려주세요.</div>
+      ` : `
+        <label>Nonce 선택 (1∼${nMax})</label>
+        <div class="nonce-pick">
+          ${Array.from({length:nMax},(_,k)=>k+1).map(n=>`<div class="np ${studentNonce===n?'active':''}" onclick="pickNonce(${n})">${n}</div>`).join("")}
+        </div>
+        ${studentNonce ? `<div class="hint" style="text-align:center;color:#a5b4fc">Nonce <b>${studentNonce}</b> 선택됨 — 직접 계산 후 제출하세요.</div>` : `<div class="hint" style="text-align:center">Nonce를 선택한 뒤 제출 버튼을 누르세요.</div>`}
+        <button class="primary" onclick="submitHash()" ${studentNonce?'':'disabled'}>해시값 제출</button>
+        <div class="hint">제출 전까지 정답 여부는 표시되지 않습니다. 정답자 중 빨리 제출한 순서로 포인트가 부여됩니다.</div>
+      `}
+    </div>`;
+  }
+
+  // 내 그룹 랭킹(그룹 사용 시)
+  let groupRankCard = "";
+  if(myGroup){
+    const gr = groupedRank()[myGroup] || [];
+    groupRankCard = `<div class="card"><h2>🧩 내 그룹(${myGroup}조) 랭킹</h2><div class="scroll-x">
+      <table><tr><th>순위</th><th>이름(학번)</th><th>점수</th></tr>
+      ${gr.map((s,i)=>{
+        const me = s.sid===session.sid;
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+        return `<tr class="${i<3?'rank-'+(i+1):''}"><td><span class="medal">${medal}</span></td>
+          <td>${esc(s.name)}${me?' <span class="badge purple">나</span>':''} <span style="font-size:10px;color:#94a3b8">(${esc(s.sid)})</span></td>
+          <td><b>${s.points}점</b></td></tr>`;
+      }).join("")}
+      </table></div></div>`;
+  }
+
+  const lookupCard = `
+  <div class="card">
+    <h2>🔢 룩업표</h2>
+    <div class="lookup">
+      ${Object.keys(LOOKUP).map(k=>`<div class="lk"><div class="c">${k}</div><div class="n">${LOOKUP[k]}</div></div>`).join("")}
+    </div>
+  </div>`;
+
+  app.innerHTML = `
+  <div class="header">
+    <h1>🔗 블록체인 채굴 게임</h1>
+    <div class="sub">채굴자(Miner) · 해시를 찾아 블록을 완성하세요!</div>
+    <div class="userbar">
+      <span>${esc(session.name)} (${esc(session.sid)})</span>
+      ${myGroup?`<span class="room-chip">${myGroup}조</span>`:''}
+      <button class="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="my-points">
+      <div class="num">${myPts}</div>
+      <div class="lbl">내 누적 포인트</div>
+      ${myGroup?`<div class="gtag"><span class="badge grouptag">🧩 ${myGroup}조 소속</span></div>`:''}
+    </div>
+    ${chainHTML("student")}
+    ${blockCard}
+    ${groupRankCard}
+    ${lookupCard}
+  </div>`;
+}
+function pickNonce(n){ studentNonce=n; renderStudent(); }
+function submitHash(){
+  const cur = DB.currentBlock;
+  const block = DB.blocks[cur-1];
+  if(!block || !block.open){ toast("현재 제출 가능한 블록이 없습니다."); return; }
+  if(DB.submissions.some(s=>s.block===cur && s.sid===session.sid)){ toast("이미 제출했습니다."); return; }
+  if(!studentNonce){ toast("Nonce를 선택하세요"); return; }
+  const calc = calcHash(block, studentNonce);
+  const correct = (calc.hash % 3 === 0);
+  const sub = { block:cur, name:session.name, sid:session.sid, hash:calc.hash, nonce:studentNonce, correct, time:Date.now() };
+  DB.submissions.push(sub);
+  myLocalSubs.push(sub);
+  try{ localStorage.setItem(myLocalKey(), JSON.stringify(myLocalSubs)); }catch(e){}
+  studentNonce = null;
+  pushNow();
+  toast(correct ? "정답 제출! 포인트가 배분되었습니다." : "제출 완료 (오답)");
+  renderStudent();
+}
+
+/* ============================================================
+   유틸
+   ============================================================ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+function pad(n){ return n<10?'0'+n:''+n; }
+function fmtDate(ts){
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+let toastTimer=null;
+function toast(msg){
+  const old=document.querySelector(".toast"); if(old) old.remove();
+  const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.remove(),2600);
+}
+
+/* 주기 동기화 (입력 중에는 화면 갱신 보류) */
+setInterval(()=>{
+  if(!session.role) return;
+  const active = document.activeElement;
+  const typing = active && (active.tagName==="INPUT" || active.tagName==="SELECT");
+  if(SYNC.mode==="cloud"){
+    // 클라우드는 항상 GET/병합하되, 타이핑 중이면 render는 syncOnce 내부에서 일어나므로
+    // 입력 포커스를 잃지 않도록 타이핑 중엔 동기화를 건너뜀
+    if(!typing) syncOnce(false);
+  } else {
+    if(!typing){ loadOffline(); render(); }
+  }
+}, 3000);
+
+/* 오프라인: 같은 브라우저 다른 탭 동기화 */
+window.addEventListener("storage",(e)=>{
+  if(SYNC.mode!=="cloud" && e.key===offlineKey()){ loadOffline(); render(); }
+});
+
+/* ============================================================
+   시작
+   ============================================================ */
+(async function start(){
+  // URL 해시에서 방 코드 추출 (#room=XXXX)
+  const m = location.hash.match(/room=([^&]+)/);
+  if(m){ prefillRoom = decodeURIComponent(m[1]); }
+
+  // 세션/방 복원
+  try{
+    const sess = JSON.parse(localStorage.getItem(LS_SESS));
+    const room = localStorage.getItem(LS_ROOM);
+    if(sess && sess.role){
+      session = sess;
+      if(room){
+        SYNC.roomId = room;
+        try{ const r = await fetchRoom(room); if(r){ SYNC.mode="cloud"; DB=normalize(r); } else { SYNC.mode="offline"; loadOffline(); } }
+        catch(e){ SYNC.mode="offline"; loadOffline(); }
+      } else { SYNC.mode="offline"; loadOffline(); }
+      if(session.role==="student"){
+        try{ myLocalSubs = JSON.parse(localStorage.getItem(myLocalKey())) || []; }catch(e){ myLocalSubs=[]; }
+      }
+    }
+  }catch(e){}
+
+  render();
+  if(session.role){ syncOnce(false); }
+})();
+</script>
+</body>
+</html>
